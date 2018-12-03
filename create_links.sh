@@ -20,14 +20,30 @@ DATA_DIR=./data/
 
 
 # Create links for Pascal_VOC2007.
-PASCAL_VOC2007=../data/VOC2007
+#PASCAL_VOC2007=../data/VOC2007
+#
+#ls -l ${PASCAL_VOC2007}
+#
+#if [ -e ${DATA_DIR}VOC2007 ]
+#then
+#    echo "The link already exists."
+#else
+#    echo "The link doest not exists."
+#    ln -s ${PREFIX}${PASCAL_VOC2007} ${DATA_DIR}VOC2007
+#fi
 
-ls -l ${PASCAL_VOC2007}
 
-if [ -e ${DATA_DIR}VOC2007 ]
+# Create links for checkpoints
+CHECKPOINT_DIR=./
+CHECKPOINTS_FOLDER=../checkpoints/
+
+#ls -l ${CHECKPOINTS_FOLDER}
+
+if [ -e ${CHECKPOINT_DIR}/checkpoints ]
 then
-    echo "The link already exists."
+    echo "The folder already exists"
 else
-    echo "The link doest not exists."
-    ln -s ${PREFIX}${PASCAL_VOC2007} ${DATA_DIR}VOC2007
+    echo "The checkpoints folder does not exists."
+    ln -s ${CHECKPOINTS_FOLDER} ${CHECKPOINT_DIR}
 fi
+
