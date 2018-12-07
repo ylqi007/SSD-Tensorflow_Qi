@@ -44,3 +44,14 @@
                                                              'object/bbox'])
         ```
 
+3. Create SSD network.
+* The directory for nets:
+    ```
+    ./nets/
+        |--> custom_layers.py
+        |--> net_factory.py
+        |--> ssd_vgg_300.py
+    ```
+
+    1. ssd_vgg_300.SSDNet.net()
+    2. ssd_vgg_300.SSDNet.anchors()

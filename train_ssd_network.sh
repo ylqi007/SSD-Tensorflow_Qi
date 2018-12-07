@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Use pascal voc to train.
-DATASET_DIR=/tmp/tfrecord1/
+DATASET_DIR=/tmp/tfrecords1/
 TRAIN_DIR=./logs/
 CHECKPOINT_PATH=./checkpoints/ssd_300_vgg.ckpt
 

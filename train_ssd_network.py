@@ -17,6 +17,8 @@
 import tensorflow as tf
 
 from datasets import dataset_factory
+from deployment import model_deploy
+from nets import nets_factory
 
 slim = tf.contrib.slim
 
@@ -117,23 +119,44 @@ def main(_):
     if not FLAGS.dataset_dir:
         raise ValueError('You must supply the dataset directory with --dataset_dir')
 
-    dataset = dataset_factory.get_dataset(
-        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
-    print(dataset)
-    with tf.name_scope(FLAGS.dataset_name + '_data_provider'):
-        provider = slim.dataset_data_provider.DatasetDataProvider(
-            dataset,
-            num_readers=FLAGS.num_readers,
-            common_queue_capacity=20 * FLAGS.batch_size,
-            common_queue_min=10 * FLAGS.batch_size,
-            shuffle=True)
-        [image, shape, glables, gbboxes] = provider.get(['image', 'shape',
-                                                         'object/label',
-                                                         'object/bbox'])
-        print("image: ", image)
-        print("shape: ", shape)
-        print("glables: ", glables)
-        print("gbboxes: ", gbboxes)
+    tf.logging.set_verbosity(tf.logging.ERROR)
+    with tf.Graph().as_default():
+        # Config model deploy. Keep TF Slim Models structure.
+        # Useful if want to need multiple GPUs and/or servers in the future.
+        deploy_config = model_deploy.DeploymentConfig(
+            num_clones=FLAGS.num_clones,
+            clone_on_cpu=FLAGS.clone_on_cpu,
+            replica_id=0,
+            num_replicas=1,
+            num_ps_tasks=0)
+        # Create glocal step.
+        with tf.device(deploy_config.variables_device()):
+            global_step = slim.create_global_step()
+        print('global step: ', global_step, "##", global_step.name)
+
+        # Select the dataset.
+        dataset = dataset_factory.get_dataset(
+            FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
+
+        # Get the SSD network and its anchors.
+        ssd_class = nets_factory.get_network(FLAGS.model_name)
+
+        # print('Dataset: ', dataset)
+        with tf.name_scope(FLAGS.dataset_name + '_data_provider'):
+
+            provider = slim.dataset_data_provider.DatasetDataProvider(
+                dataset,
+                num_readers=FLAGS.num_readers,
+                common_queue_capacity=20 * FLAGS.batch_size,
+                common_queue_min=10 * FLAGS.batch_size,
+                shuffle=True)
+            [image, shape, glables, gbboxes] = provider.get(['image', 'shape',
+                                                             'object/label',
+                                                             'object/bbox'])
+            print("image: ", image)
+            print("shape: ", shape)
+            print("glables: ", glables)
+            print("gbboxes: ", gbboxes)
 
 
 if __name__ == '__main__':
