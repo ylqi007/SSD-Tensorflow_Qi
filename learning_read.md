@@ -55,3 +55,5 @@
 
     1. ssd_vgg_300.SSDNet.net()
     2. ssd_vgg_300.SSDNet.anchors()
+    3. ssd_common.tf_ssd_bboxes_encode() ==> Not check yet, because it's complex to get groundtruth boxes.
+

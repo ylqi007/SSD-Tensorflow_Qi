@@ -35,6 +35,7 @@ import numpy as np
 import tensorflow as tf
 
 from nets import custom_layers
+from nets import ssd_common
 slim = tf.contrib.slim
 
 # =========================================================================== #
@@ -144,6 +145,38 @@ class SSDNet(object):
                                       self.params.anchor_steps,
                                       self.params.anchor_offset,
                                       dtype)
+
+    def bboxes_encode(self, labels, bboxes, anchors, scope=None):
+        """Encode labels and bounding boxes."""
+        return ssd_common.tf_ssd_bboxes_encode(
+            labels, bboxes, anchors,
+            self.params.num_classes,
+            self.params.no_annotation_label,
+            ignore_threshold=0.5,
+            prior_scaling=self.params.prior_scaling,
+            scope=scope)
+
+    def bboxes_decode(self):
+        pass
+
+    def detected_bboxes(self):
+        pass
+
+    def losses(self, logits, localisations,
+               gclasses, glocalisations, gscores,
+               match_threshold=0.5,
+               negative_ratio=3.,
+               alpha=1.,
+               label_smoothing=0.,
+               scope='ssd_losses'):
+        """Define the SSD network losses."""
+        return ssd_losses(logits, localisations,
+                          gclasses, glocalisations, gscores,
+                          match_threshold=match_threshold,
+                          negative_ratio=negative_ratio,
+                          alpha=alpha,
+                          label_smoothing=label_smoothing,
+                          scope=scope)
 
 
 # =========================================================================== #
@@ -409,4 +442,18 @@ if __name__ == '__main__':
     obj = SSDNet(ssd_params)
     end_points = obj.net(image)
     anchors = obj.anchors((300, 300))
-    print('anchors: ', anchors[5])
+    yref, xref, href, wref = anchors[4]
+    print('yref: ', yref, "\t", anchors[4][0])
+    print('shape of yref: ', yref.shape)
+    print('size of href: ', href.size)
+    print('xref: ', xref, "\t", anchors[4][1])
+    print('href: ', href, "\t", anchors[4][2])
+    print('wref: ', wref, "\t", anchors[4][3])
+    print(type(anchors[4]), anchors[4])
+
+
+# =========================================================================== #
+# SSD loss function.
+# =========================================================================== #
+
+
