@@ -40,23 +40,6 @@ def tf_ssd_bboxes_encode_layer(labels,
     :return:
         (target_labels, target_localizations, target_scores): Target Tensors.
     """
-    yref, xref, href, wref = anchors_layer
-    ymin = yref - href / 2.
-    xmin = xref - wref / 2.
-    ymax = yref + href / 2.
-    xmax = xref + wref / 2.
-    vol_anchors = (xmax - xmin) * (ymax - ymin)
-
-    # Initialize tensors...
-    shape = (yref.shape[0], yref.shape[1], href.size)
-    feat_labels = tf.zeros(shape, dtype=tf.int64)
-    feat_scores = tf.zeros(shape, dtype=dtype)
-
-    feat_ymin = tf.zeros(shape, dtype=dtype)
-    feat_xmin = tf.zeros(shape, dtype=dtype)
-    feat_ymax = tf.ones(shape, dtype=dtype)
-    feat_xmax = tf.ones(shape, dtype=dtype)
-
     def jaccard_with_anchors(bbox):
         """Compute jaccard score between a box and the anchors."""
         int_ymin = tf.maximum(ymin, bbox[0])
@@ -83,7 +66,7 @@ def tf_ssd_bboxes_encode_layer(labels,
     def body(i, feat_labels, feat_scores,
              feat_ymin, feat_xmin, feat_ymax, feat_xmax):
         """
-        body: update feature labels, scores and bboxes.
+        Body: update feature labels, scores and bboxes.
         Follow the original SSD paper for that purpose:
             - assign values when jaccard > 0.5;
             - only update if beat the score of other bboxes.
@@ -106,8 +89,26 @@ def tf_ssd_bboxes_encode_layer(labels,
         feat_xmin = fmask * bbox[1] + (1 - fmask) * feat_xmin
         feat_ymax = fmask * bbox[2] + (1 - fmask) * feat_ymax
         feat_xmax = fmask * bbox[3] + (1 - fmask) * feat_xmax
+
         return [i + 1, feat_labels, feat_scores,
                 feat_ymin, feat_xmin, feat_ymax, feat_xmax]
+
+    yref, xref, href, wref = anchors_layer
+    ymin = yref - href / 2.
+    xmin = xref - wref / 2.
+    ymax = yref + href / 2.
+    xmax = xref + wref / 2.
+    vol_anchors = (xmax - xmin) * (ymax - ymin)
+
+    # Initialize tensors...
+    shape = (yref.shape[0], yref.shape[1], href.size)
+    feat_labels = tf.zeros(shape, dtype=tf.int64)
+    feat_scores = tf.zeros(shape, dtype=dtype)
+
+    feat_ymin = tf.zeros(shape, dtype=dtype)
+    feat_xmin = tf.zeros(shape, dtype=dtype)
+    feat_ymax = tf.ones(shape, dtype=dtype)
+    feat_xmax = tf.ones(shape, dtype=dtype)
 
     # Main loop definition.
     i = 0
@@ -116,12 +117,13 @@ def tf_ssd_bboxes_encode_layer(labels,
      feat_ymax, feat_xmax] = tf.while_loop(condition, body,
                                            [i, feat_labels, feat_scores,
                                             feat_ymin, feat_xmin,
-                                            feat_xmin, feat_xmax])
+                                            feat_ymax, feat_xmax])
     # Transform to center / size.
     feat_cy = (feat_ymax + feat_ymin) / 2.
     feat_cx = (feat_xmax + feat_xmin) / 2.
     feat_h = feat_ymax - feat_ymin
     feat_w = feat_xmax - feat_xmin
+
     # Encode features.
     feat_cy = (feat_cy - yref) / href / prior_scaling[0]
     feat_cx = (feat_cx - xref) / wref / prior_scaling[1]
@@ -168,5 +170,4 @@ def tf_ssd_bboxes_encode(labels,
                 target_localizations.append(t_loc)
                 target_scores.append(t_scores)
         return target_labels, target_localizations, target_scores
-
 
