@@ -10,7 +10,7 @@ UNT_AERIAL_DATASET=./data/UNT_Aerial_Dataset/train/
 
 ls -l ${UNT_AERIAL_DATASET}
 
-# Data convertion for UNT Aerial Dataset.
+# Data convertion for UNT Aerial Dataset -- training.
 #python3 tf_convert_data.py  \
 #    --dataset_name=unt_aerial    \
 #    --dataset_dir=${UNT_AERIAL_DATASET}    \
@@ -18,9 +18,18 @@ ls -l ${UNT_AERIAL_DATASET}
 #    --output_dir=/tmp/tfrecord1
 
 # Data convertion for Pascal VOC 2007
+# Data convertion for UNT Aerial Dataset -- training.
 PASCAL_VOC=./data/VOC2007/train/
 python3 tf_convert_data.py  \
     --dataset_name=pascalvoc    \
     --dataset_dir=${PASCAL_VOC}    \
     --output_name=voc_2007_train \
+    --output_dir=${OUTPUT_DIR}
+
+# Data convertion for UNT Aerial Dataset -- testing.
+PASCAL_VOC=./data/VOC2007/test/
+python3 tf_convert_data.py  \
+    --dataset_name=pascalvoc    \
+    --dataset_dir=${PASCAL_VOC}    \
+    --output_name=voc_2007_test \
     --output_dir=${OUTPUT_DIR}
